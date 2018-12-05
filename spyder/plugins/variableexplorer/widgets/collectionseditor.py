@@ -332,7 +332,10 @@ class ReadOnlyCollectionsModel(QAbstractTableModel):
         if index.column() == 3:
             display = value_to_display(value, minmax=self.minmax)
         else:
-             display = to_text_string(value)
+            if is_type_text_string(value):
+                display = to_text_string(value, encoding="utf-8")
+            else:
+                display = to_text_string(value)
         if role == Qt.DisplayRole:
             return to_qvariant(display)
         elif role == Qt.EditRole:
@@ -520,7 +523,13 @@ class CollectionsDelegate(QItemDelegate):
             return None
         # QDateEdit and QDateTimeEdit for a dates or datetime respectively
         elif isinstance(value, datetime.date):
+            try:
+               value.date()
+            except ValueError:
+                return None
+            
             if readonly:
+                
                 return None
             else:
                 if isinstance(value, datetime.datetime):
@@ -633,7 +642,7 @@ class CollectionsDelegate(QItemDelegate):
             editor.setDate(value)
         elif isinstance(editor, QDateTimeEdit):
             editor.setDateTime(QDateTime(value.date(), value.time()))
-
+           
     def setModelData(self, editor, model, index):
         """
         Overriding method setModelData
